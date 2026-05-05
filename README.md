@@ -26,4 +26,3 @@ Legacy Lock acts as a **Dead Man's Switch** that lives entirely in your browser 
 5. Give the Master Password to your trusted emergency contact.
 
 ---
-*Created as part of the "One App a Week" Trend Challenge - Week 1.*
