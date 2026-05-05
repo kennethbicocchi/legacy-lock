@@ -1,0 +1,27 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    @apply bg-zinc-950;
+    margin: 0;
+    padding: 0;
+  }
+}
+
+/* Custom Scrollbar for the Cyber-Vault aesthetic */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(9, 9, 11, 1); /* zinc-950 */
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(6, 78, 59, 0.5); /* emerald-900 with opacity */
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(5, 150, 105, 0.8); /* emerald-600 with opacity */
+}
