@@ -19,11 +19,14 @@ export default function App() {
   });
   
   const [timeLeft, setTimeLeft] = useState(selectedDuration);
-  
-  // Ref for the hidden file input
   const fileInputRef = useRef(null);
 
-  // Attempt decryption on initial load
+  /**
+   * Initial Load Decryption Logic
+   * Attempts to decrypt the stored payload when the app first loads.
+   * If the payload was encrypted without a password (empty string), it will succeed.
+   * If it requires a master password, decryption fails silently until provided.
+   */
   useEffect(() => {
     const encryptedData = localStorage.getItem(STORAGE_KEY);
     if (encryptedData) {
@@ -39,7 +42,12 @@ export default function App() {
     }
   }, []);
 
-  // Countdown timer effect
+  /**
+   * Countdown Timer Logic
+   * Manages the dead man's switch countdown mechanism.
+   * Decrements the `timeLeft` state every second.
+   * Once it hits zero, the effect gracefully terminates the interval.
+   */
   useEffect(() => {
     if (timeLeft <= 0) return;
 
@@ -50,13 +58,25 @@ export default function App() {
     return () => clearInterval(timerId);
   }, [timeLeft]);
 
-  // Global Interaction Handler for the Dead Man's Switch
+  /**
+   * Dead Man's Switch Interaction Handler
+   * Resets the countdown timer back to the selected check-in frequency.
+   * We throttle the reset logic by checking if at least 1 second has passed
+   * to avoid triggering excessive React re-renders on continuous events like `onMouseMove`.
+   */
   const handleInteraction = () => {
-    // Only reset if we've lost at least 1 second to prevent excessive re-renders
     setTimeLeft(prev => (prev < selectedDuration ? selectedDuration : prev));
   };
 
-  // Handler for duration changes
+  /**
+   * Duration Change Handler
+   * Why 30 seconds vs real-world durations?
+   * - 30 Seconds is purely for testing the emergency trigger without waiting.
+   * - Real-world durations (24 Hours, 7 Days, 30 Days) are meant for the actual deployment,
+   *   acting as a genuine dead man's switch that requires periodic check-ins.
+   * 
+   * @param {Event} e - The select input change event
+   */
   const handleDurationChange = (e) => {
     const newDuration = parseInt(e.target.value, 10);
     setSelectedDuration(newDuration);
@@ -64,7 +84,16 @@ export default function App() {
     setTimeLeft(newDuration); // Immediately reset timer to new duration
   };
 
-  // Handler for master password changes
+  /**
+   * Master Password & Decryption Handler
+   * Re-attempts to decrypt the payload every time the master password changes.
+   * 
+   * SECURITY WARNING: This encryption/decryption process is 100% client-side.
+   * The Master Password never leaves the browser. If the user forgets the Master Password,
+   * the payload cannot be mathematically recovered.
+   * 
+   * @param {Event} e - The password input change event
+   */
   const handlePasswordChange = (e) => {
     const pwd = e.target.value;
     setMasterPassword(pwd);
@@ -85,7 +114,16 @@ export default function App() {
     }
   };
 
-  // Handler for text area changes
+  /**
+   * Encryption & Note Change Handler
+   * Fires whenever the user types into the legacy note textarea.
+   * 
+   * SECURITY WARNING: Encryption is performed entirely client-side using AES-256.
+   * The plain text is NEVER written to storage. Only the cipher text is saved
+   * locally inside `localStorage`.
+   * 
+   * @param {Event} e - The textarea change event
+   */
   const handleNoteChange = (e) => {
     const newText = e.target.value;
     setSecretNote(newText);
@@ -95,7 +133,13 @@ export default function App() {
     localStorage.setItem(STORAGE_KEY, encryptedText);
   };
 
-  // Format seconds into a readable string
+  /**
+   * Time Formatter Helper
+   * Converts raw seconds into a human-readable countdown string (e.g. "7d 14:02:45").
+   * 
+   * @param {number} totalSeconds - The time left in seconds
+   * @returns {string} The formatted countdown string
+   */
   const formatTime = (totalSeconds) => {
     if (totalSeconds < 60) return `00:${totalSeconds.toString().padStart(2, '0')}`;
     
@@ -110,7 +154,11 @@ export default function App() {
     return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   };
 
-  // Export Vault to JSON
+  /**
+   * Export JSON Logic
+   * Packages the currently encrypted local storage payload into a downloadable
+   * JSON backup file. This file can be safely stored or transmitted since it's encrypted.
+   */
   const handleExportJSON = () => {
     const encryptedData = localStorage.getItem(STORAGE_KEY) || '';
     const data = {
@@ -127,7 +175,13 @@ export default function App() {
     URL.revokeObjectURL(url);
   };
 
-  // Import Vault from JSON
+  /**
+   * Import JSON Logic
+   * Parses an uploaded JSON backup file, extracts the encrypted payload, saves it,
+   * and attempts an immediate decryption pass using the current master password.
+   * 
+   * @param {Event} e - The file input change event
+   */
   const handleImportJSON = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -156,7 +210,12 @@ export default function App() {
     e.target.value = '';
   };
 
-  // Export as Standalone HTML
+  /**
+   * Standalone HTML Generator Logic
+   * Generates an entirely self-contained offline HTML file.
+   * Embeds the raw `crypto-js` library logic so decryption works without an internet connection.
+   * Embeds the encrypted payload directly into the script execution context.
+   */
   const handleExportHTML = () => {
     const encryptedData = localStorage.getItem(STORAGE_KEY) || '';
     const safeCryptoJsSource = cryptoJsSource.replace(/<\/script>/gi, '<\\/script>');
